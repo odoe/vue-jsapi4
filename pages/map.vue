@@ -17,9 +17,6 @@
   </section>
 </template>
 <script>
-// import * as esriLoader from 'esri-loader'
-
-// now we only need the loadModules() function
 import { loadModules } from 'esri-loader'
 
 export default {
@@ -35,76 +32,41 @@ export default {
   },
   mounted () {
     console.log('map: mounted')
-    const createMap = () => {
-      // first, we use Dojo's loader to require the map class
-      // esriLoader.dojoRequire([
-
-      // now we use loadModules() instead of dojoRequire()
-      loadModules([
-        'esri/Map',
-        'esri/views/SceneView',
-        'esri/core/watchUtils'
-      ],
-        // now we include the options we would have passed to bootstrap()
-        // as the second argument to loadModules
-        {
-          // use a specific version instead of latest 4.x
-          url: 'https://js.arcgis.com/4.2/'
-        }
-      // now loadModules returns a promise so the callback gets passed to .then()
-      ).then(([EsriMap, SceneView, watchUtils]) => {
-        // create map with the given options at a DOM node w/ id 'mapNode'
-        let map
-        if (!this.$store.state.map) {
-          map = new EsriMap({
-            basemap: 'satellite',
-            ground: 'world-elevation'
-          })
-          this.$store.state.map = map
-        } else {
-          map = this.$store.state.map
-        }
-        const view = new SceneView({
-          container: 'viewDiv',
-          map,
-          camera: this.$store.state.camera
+    loadModules([
+      'esri/Map',
+      'esri/views/SceneView',
+      'esri/core/watchUtils'
+    ], {
+      // use a specific version instead of latest 4.x
+      url: 'https://js.arcgis.com/4.2/'
+    }).then(([EsriMap, SceneView, watchUtils]) => {
+      // create map with the given options at a DOM node w/ id 'mapNode'
+      let map
+      if (!this.$store.state.map) {
+        map = new EsriMap({
+          basemap: 'satellite',
+          ground: 'world-elevation'
         })
-
-        this.$store.state.watchHandle = watchUtils.watch(view, 'camera', (camera) => {
-          console.log('change')
-          this.$store.state.camera = camera.clone().toJSON()
-        })
-
-        // NOTE: important: now that we're using a promise
-        // your callback must NOT return any v4.x classes that resolve to promises
-        // this will cause a hole in the space-time continum that will kill us all
-        // return view
+        this.$store.state.map = map
+      } else {
+        map = this.$store.state.map
+      }
+      const view = new SceneView({
+        container: 'viewDiv',
+        map,
+        camera: this.$store.state.camera
       })
-    }
 
-    // now with loadModules() we no longer need any of this business
-    // has the ArcGIS API been added to the page?
-    // if (!esriLoader.isLoaded()) {
-    //   // no, lazy load it the ArcGIS API before using its classes
-    //   esriLoader.bootstrap((err) => {
-    //     if (err) {
-    //       console.error(err)
-    //     }
-    //     // once it's loaded, create the map
-    //     createMap()
-    //   }, {
-    //     // use a specific version instead of latest 4.x
-    //     url: 'https://js.arcgis.com/4.2/'
-    //   })
-    // } else {
-    //   // ArcGIS API is already loaded, just create the map
-    //   createMap()
-    // }
+      this.$store.state.watchHandle = watchUtils.watch(view, 'camera', (camera) => {
+        console.log('change')
+        this.$store.state.camera = camera.clone().toJSON()
+      })
 
-    // instead we just call createMap()
-    // in fact, createMap() is no longer needed
-    // we could have just called loadModules()
-    createMap()
+      // NOTE: important: now that we're using a promise
+      // your callback must NOT return any v4.x classes that resolve to promises
+      // this will cause a hole in the space-time continum that will kill us all
+      // return view
+    })
   },
   beforeDestroy () {
     console.log('map: beforeDestroy')
