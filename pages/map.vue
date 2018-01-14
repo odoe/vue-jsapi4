@@ -17,7 +17,10 @@
   </section>
 </template>
 <script>
-import * as esriLoader from 'esri-loader'
+// import * as esriLoader from 'esri-loader'
+
+// now we only need the loadModules() function
+import { loadModules } from 'esri-loader'
 
 export default {
   data ({ req }) {
@@ -34,11 +37,22 @@ export default {
     console.log('map: mounted')
     const createMap = () => {
       // first, we use Dojo's loader to require the map class
-      esriLoader.dojoRequire([
+      // esriLoader.dojoRequire([
+
+      // now we use loadModules() instead of dojoRequire()
+      loadModules([
         'esri/Map',
         'esri/views/SceneView',
         'esri/core/watchUtils'
-      ], (EsriMap, SceneView, watchUtils) => {
+      ],
+        // now we include the options we would have passed to bootstrap()
+        // as the second argument to loadModules
+        {
+          // use a specific version instead of latest 4.x
+          url: 'https://js.arcgis.com/4.2/'
+        }
+      // now loadModules returns a promise so the callback gets passed to .then()
+      ).then(([EsriMap, SceneView, watchUtils]) => {
         // create map with the given options at a DOM node w/ id 'mapNode'
         let map
         if (!this.$store.state.map) {
@@ -61,27 +75,36 @@ export default {
           this.$store.state.camera = camera.clone().toJSON()
         })
 
-        return view
+        // NOTE: important: now that we're using a promise
+        // your callback must NOT return any v4.x classes that resolve to promises
+        // this will cause a hole in the space-time continum that will kill us all
+        // return view
       })
     }
 
+    // now with loadModules() we no longer need any of this business
     // has the ArcGIS API been added to the page?
-    if (!esriLoader.isLoaded()) {
-      // no, lazy load it the ArcGIS API before using its classes
-      esriLoader.bootstrap((err) => {
-        if (err) {
-          console.error(err)
-        }
-        // once it's loaded, create the map
-        createMap()
-      }, {
-        // use a specific version instead of latest 4.x
-        url: 'https://js.arcgis.com/4.2/'
-      })
-    } else {
-      // ArcGIS API is already loaded, just create the map
-      createMap()
-    }
+    // if (!esriLoader.isLoaded()) {
+    //   // no, lazy load it the ArcGIS API before using its classes
+    //   esriLoader.bootstrap((err) => {
+    //     if (err) {
+    //       console.error(err)
+    //     }
+    //     // once it's loaded, create the map
+    //     createMap()
+    //   }, {
+    //     // use a specific version instead of latest 4.x
+    //     url: 'https://js.arcgis.com/4.2/'
+    //   })
+    // } else {
+    //   // ArcGIS API is already loaded, just create the map
+    //   createMap()
+    // }
+
+    // instead we just call createMap()
+    // in fact, createMap() is no longer needed
+    // we could have just called loadModules()
+    createMap()
   },
   beforeDestroy () {
     console.log('map: beforeDestroy')
